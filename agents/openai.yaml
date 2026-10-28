@@ -1,0 +1,4 @@
+interface:
+  display_name: "OceanBase SQL Review"
+  short_description: "Audit OceanBase SQL, access paths, and index proposals"
+  default_prompt: "Review these OceanBase SQL statements for correctness and performance risks, then propose verified index changes."
