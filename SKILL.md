@@ -71,3 +71,5 @@ Use these sections when the request is a review:
 
 Keep speculative advice explicitly labeled. Do not claim an improvement that
 was not observed or clearly derived from the supplied plan/statistics.
+
+<!-- OB-S:rPXCEm2r6hH_6SfKcT0CTw -->
