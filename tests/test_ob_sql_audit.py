@@ -46,6 +46,15 @@ class SQLAuditTests(unittest.TestCase):
         """
         self.assertEqual(rules(sql), set())
 
+    def test_scoped_update_and_delete_are_not_reported(self) -> None:
+        self.assertEqual(
+            rules(
+                "UPDATE orders SET state = 'x' WHERE id = 9;"
+                "DELETE FROM orders WHERE tenant_id = 2 AND expires_at < NOW()"
+            ),
+            set(),
+        )
+
     def test_static_review_signals_are_reported(self) -> None:
         sql = """
         SELECT *
@@ -68,6 +77,29 @@ class SQLAuditTests(unittest.TestCase):
                 "large-pagination-offset",
             },
             rules(sql),
+        )
+
+    def test_right_hand_function_wrapper_is_reported(self) -> None:
+        self.assertIn(
+            "function-on-predicate",
+            rules("SELECT id FROM orders WHERE id = CAST('42' AS UNSIGNED)"),
+        )
+
+    def test_large_in_list_is_reported(self) -> None:
+        values = ",".join(str(index) for index in range(101))
+        self.assertIn(
+            "large-in-list",
+            rules(f"SELECT id FROM orders WHERE id IN ({values})"),
+        )
+
+    def test_statement_numbers_survive_splitting(self) -> None:
+        findings = AUDIT.audit_sql(
+            "SELECT id FROM orders WHERE id = 1;\n"
+            "DELETE FROM orders;"
+        )
+        self.assertEqual(
+            [(finding.rule, finding.statement) for finding in findings],
+            [("mutation-without-where", 2)],
         )
 
     def test_cross_join_is_not_reported_as_missing_join_predicate(self) -> None:
